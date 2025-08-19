@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Design System - Examples</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind for our custom colors
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'pastel-pink': {
+                            50: '#fef7f7', 100: '#fdeaea', 200: '#fbd5d5', 300: '#f8b4b4', 
+                            400: '#f38686', 500: '#ec5a5a', 600: '#d73c3c', 700: '#b52d2d'
+                        },
+                        'pastel-blue': {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 
+                            400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1'
+                        },
+                        'pastel-green': {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 
+                            400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d'
+                        },
+                        'pastel-purple': {
+                            50: '#faf5ff', 100: '#f3e8ff', 200: '#e9d5ff', 300: '#d8b4fe', 
+                            400: '#c084fc', 500: '#a855f7', 600: '#9333ea', 700: '#7c3aed'
+                        }
+                    },
+                    borderRadius: {
+                        'card': '12px',
+                        'game': '16px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            --color-background: #ffffff;
+            --color-surface: #ffffff;
+            --color-border: #e5e7eb;
+            --color-text: #111827;
+            --color-text-secondary: #6b7280;
+            --color-primary: #38bdf8;
+            --color-primary-hover: #0ea5e9;
+        }
+
+        .dark {
+            --color-background: #111827;
+            --color-surface: #1f2937;
+            --color-border: #4b5563;
+            --color-text: #f3f4f6;
+            --color-text-secondary: #d1d5db;
+            --color-primary: #7dd3fc;
+            --color-primary-hover: #bae6fd;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-text);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        /* Card styles */
+        .game-card {
+            width: 80px;
+            height: 112px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .game-card {
+            background: linear-gradient(145deg, #2d3748 0%, #4a5568 100%);
+            border-color: #4a5568;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-weight: bold;
+            font-size: 0.75rem;
+            line-height: 1;
+        }
+
+        .card-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-weight: bold;
+            font-size: 0.75rem;
+            line-height: 1;
+            transform: rotate(180deg);
+        }
+
+        .suit-red { color: #e53e3e; }
+        .suit-black { color: #1a202c; }
+        .dark .suit-black { color: #f7fafc; }
+
+        /* Health bar styles */
+        .health-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .health-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .health-normal { background-color: #4ade80; }
+        .health-warning { background-color: #fb923c; }
+        .health-critical { background-color: #f87171; }
+
+        /* Modal styles */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--color-surface);
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+            border: 1px solid var(--color-border);
+        }
+
+        /* Score display styles */
+        .score-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        /* Section styles */
+        .section {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--color-text);
+        }
+
+        /* Hand layout styles */
+        .hand-fan {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .hand-fan .game-card {
+            margin-left: -40px;
+            transform-origin: bottom center;
+        }
+
+        .hand-fan .game-card:nth-child(1) { transform: rotate(-20deg); }
+        .hand-fan .game-card:nth-child(2) { transform: rotate(-10deg); }
+        .hand-fan .game-card:nth-child(3) { transform: rotate(0deg); }
+        .hand-fan .game-card:nth-child(4) { transform: rotate(10deg); }
+        .hand-fan .game-card:nth-child(5) { transform: rotate(20deg); }
+
+        .hand-fan .game-card:first-child {
+            margin-left: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .section {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .hand-fan {
+                padding: 1rem;
+            }
+            
+            .hand-fan .game-card {
+                margin-left: -30px;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 font-sans">
+    <div id="app">
+        <!-- Header -->
+        <header class="section">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-transparent bg-gradient-to-r from-pastel-blue-400 to-pastel-purple-400 bg-clip-text">
+                    Card Game Design System
+                </h1>
+                <button 
+                    @click="toggleTheme" 
+                    class="btn-secondary"
+                    :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                >
+                    {{ isDark ? '☀️' : '🌙' }} {{ isDark ? 'Light' : 'Dark' }}
+                </button>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300 mt-2">
+                A comprehensive Vue.js design system with Tailwind CSS for card game applications.
+                Features pastel theming, accessibility, and mobile-first responsive design.
+            </p>
+        </header>
+
+        <!-- Theme Demo -->
+        <section class="section">
+            <h2>🎨 Theme System</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <button @click="setTheme('light')" class="btn-secondary" :class="{ 'btn-primary': theme === 'light' }">
+                    ☀️ Light Theme
+                </button>
+                <button @click="setTheme('dark')" class="btn-secondary" :class="{ 'btn-primary': theme === 'dark' }">
+                    🌙 Dark Theme
+                </button>
+                <button @click="setTheme('system')" class="btn-secondary" :class="{ 'btn-primary': theme === 'system' }">
+                    🔄 System Theme
+                </button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                <div class="text-center">
+                    <div class="w-full h-12 bg-pastel-pink-400 rounded mb-2"></div>
+                    <small>Pink</small>
+                </div>
+                <div class="text-center">
+                    <div class="w-full h-12 bg-pastel-blue-400 rounded mb-2"></div>
+                    <small>Blue</small>
+                </div>
+                <div class="text-center">
+                    <div class="w-full h-12 bg-pastel-green-400 rounded mb-2"></div>
+                    <small>Green</small>
+                </div>
+                <div class="text-center">
+                    <div class="w-full h-12 bg-pastel-purple-400 rounded mb-2"></div>
+                    <small>Purple</small>
+                </div>
+                <div class="text-center">
+                    <div class="w-full h-12 bg-orange-400 rounded mb-2"></div>
+                    <small>Orange</small>
+                </div>
+                <div class="text-center">
+                    <div class="w-full h-12 bg-yellow-400 rounded mb-2"></div>
+                    <small>Yellow</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Buttons Demo -->
+        <section class="section">
+            <h2>🔘 Buttons</h2>
+            <div class="flex flex-wrap gap-3 mb-4">
+                <button class="btn-primary">Primary Button</button>
+                <button class="btn-secondary">Secondary Button</button>
+                <button class="btn-primary" disabled>Disabled</button>
+                <button class="btn-primary" @click="showLoading = !showLoading">
+                    <span v-if="showLoading" class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                    </span>
+                    <span v-else>Toggle Loading</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button class="btn-primary text-xs px-2 py-1">XS Size</button>
+                <button class="btn-primary text-sm px-3 py-1.5">SM Size</button>
+                <button class="btn-primary">MD Size</button>
+                <button class="btn-primary text-lg px-6 py-3">LG Size</button>
+            </div>
+        </section>
+
+        <!-- Game Cards Demo -->
+        <section class="section">
+            <h2>🃏 Game Cards</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="game-card" v-for="card in sampleCards" :key="card.id">
+                    <div class="card-header">
+                        <span>{{ card.rank }}</span>
+                        <span :class="card.color === 'red' ? 'suit-red' : 'suit-black'">{{ card.symbol }}</span>
+                    </div>
+                    <div class="card-center">
+                        <span :class="card.color === 'red' ? 'suit-red' : 'suit-black'">{{ card.symbol }}</span>
+                    </div>
+                    <div class="card-footer">
+                        <span>{{ card.rank }}</span>
+                        <span :class="card.color === 'red' ? 'suit-red' : 'suit-black'">{{ card.symbol }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="text-lg font-semibold mb-3">Card Hand (Fan Layout)</h3>
+            <div class="hand-fan">
+                <div class="game-card" v-for="(card, index) in handCards" :key="card.id">
+                    <div class="card-header">
+                        <span>{{ card.rank }}</span>
+                        <span :class="card.color === 'red' ? 'suit-red' : 'suit-black'">{{ card.symbol }}</span>
+                    </div>
+                    <div class="card-center">
+                        <span :class="card.color === 'red' ? 'suit-red' : 'suit-black'">{{ card.symbol }}</span>
+                    </div>
+                    <div class="card-footer">
+                        <span>{{ card.rank }}</span>
+                        <span :class="card.color === 'red' ? 'suit-red' : 'suit-black'">{{ card.symbol }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Health Bars Demo -->
+        <section class="section">
+            <h2>❤️ Health Bars</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Health: {{ healthValue }}%</label>
+                    <div class="health-bar">
+                        <div 
+                            class="health-bar-fill" 
+                            :class="healthClass"
+                            :style="{ width: healthValue + '%' }"
+                        ></div>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button class="btn-secondary text-sm" @click="setHealth(100)">Full</button>
+                        <button class="btn-secondary text-sm" @click="setHealth(50)">Half</button>
+                        <button class="btn-secondary text-sm" @click="setHealth(25)">Low</button>
+                        <button class="btn-secondary text-sm" @click="setHealth(10)">Critical</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Mana: 80%</label>
+                    <div class="health-bar">
+                        <div class="health-bar-fill bg-pastel-blue-400" style="width: 80%"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Experience: 65%</label>
+                    <div class="health-bar">
+                        <div class="health-bar-fill bg-pastel-purple-400" style="width: 65%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Score Display Demo -->
+        <section class="section">
+            <h2>🏆 Score Display</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="score-display mb-2">{{ playerScore.toLocaleString() }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Player Score</div>
+                    <button class="btn-primary text-sm mt-2" @click="addScore(100)">+100 Points</button>
+                </div>
+                <div class="text-center">
+                    <div class="score-display text-pastel-green-400 mb-2">Level {{ playerLevel }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Current Level</div>
+                    <button class="btn-primary text-sm mt-2" @click="playerLevel++">Level Up!</button>
+                </div>
+                <div class="text-center">
+                    <div class="score-display text-pastel-orange-400 mb-2">{{ timeRemaining }}s</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Time Remaining</div>
+                    <button class="btn-primary text-sm mt-2" @click="startTimer">Start Timer</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal Demo -->
+        <section class="section">
+            <h2>📱 Modal</h2>
+            <div class="flex gap-3">
+                <button class="btn-primary" @click="showModal = true">Open Modal</button>
+                <button class="btn-secondary" @click="showConfirmModal = true">Confirmation</button>
+                <button class="btn-secondary" @click="showGameOverModal = true">Game Over</button>
+            </div>
+        </section>
+
+        <!-- Accessibility Demo -->
+        <section class="section">
+            <h2>♿ Accessibility Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Keyboard Navigation</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">All components support keyboard navigation:</p>
+                    <ul class="text-sm space-y-1">
+                        <li>• Tab/Shift+Tab to navigate</li>
+                        <li>• Enter/Space to activate</li>
+                        <li>• Arrow keys for card selection</li>
+                        <li>• Escape to close modals</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Screen Reader Support</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">ARIA labels and live regions:</p>
+                    <ul class="text-sm space-y-1">
+                        <li>• Card suits and ranks announced</li>
+                        <li>• Health bar values spoken</li>
+                        <li>• Score changes announced</li>
+                        <li>• Modal focus management</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Instructions -->
+        <section class="section">
+            <h2>🚀 Usage Instructions</h2>
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 mb-4">
+                <h3 class="font-semibold mb-2">Installation</h3>
+                <pre class="text-sm overflow-x-auto"><code>npm install card-game-design-system</code></pre>
+            </div>
+            
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 mb-4">
+                <h3 class="font-semibold mb-2">Vue.js Integration</h3>
+                <pre class="text-sm overflow-x-auto"><code>import { createApp } from 'vue'
+import CardGameDesignSystem from 'card-game-design-system'
+import 'card-game-design-system/dist/style.css'
+
+const app = createApp(App)
+app.use(CardGameDesignSystem)
+app.mount('#app')</code></pre>
+            </div>
+            
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                <h3 class="font-semibold mb-2">Component Usage</h3>
+                <pre class="text-sm overflow-x-auto"><code>&lt;template&gt;
+  &lt;BaseButton variant="primary" @click="handleClick"&gt;
+    Click me!
+  &lt;/BaseButton&gt;
+  
+  &lt;GameCard 
+    rank="A" 
+    suit="hearts" 
+    @click="selectCard"
+  /&gt;
+  
+  &lt;HealthBar 
+    :value="playerHealth" 
+    :max-value="100"
+    variant="health"
+  /&gt;
+&lt;/template&gt;</code></pre>
+            </div>
+        </section>
+
+        <!-- Modals -->
+        <div v-if="showModal" class="modal-backdrop" @click="showModal = false">
+            <div class="modal-content" @click.stop>
+                <div class="p-6 border-b border-gray-200 dark:border-gray-600">
+                    <h3 class="text-lg font-semibold">Example Modal</h3>
+                </div>
+                <div class="p-6">
+                    <p class="mb-4">This is an example modal with pastel theming and smooth transitions.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        Modals automatically handle focus management, escape key, and backdrop clicks.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-600">
+                    <button class="btn-secondary" @click="showModal = false">Cancel</button>
+                    <button class="btn-primary" @click="showModal = false">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showConfirmModal" class="modal-backdrop" @click="showConfirmModal = false">
+            <div class="modal-content" @click.stop>
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold mb-4">Confirm Action</h3>
+                    <p class="mb-6">Are you sure you want to discard your hand?</p>
+                    <div class="flex justify-end gap-3">
+                        <button class="btn-secondary" @click="showConfirmModal = false">Cancel</button>
+                        <button class="btn-primary bg-red-500 hover:bg-red-600" @click="showConfirmModal = false">Discard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showGameOverModal" class="modal-backdrop" @click="showGameOverModal = false">
+            <div class="modal-content" @click.stop>
+                <div class="p-6 text-center">
+                    <div class="text-4xl mb-4">🎉</div>
+                    <h3 class="text-xl font-bold mb-2">Game Over!</h3>
+                    <div class="score-display text-2xl mb-2">{{ playerScore.toLocaleString() }}</div>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">Final Score</p>
+                    <div class="flex justify-center gap-3">
+                        <button class="btn-secondary" @click="showGameOverModal = false">Menu</button>
+                        <button class="btn-primary" @click="showGameOverModal = false; resetGame()">Play Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue
+
+        createApp({
+            setup() {
+                // Theme management
+                const theme = ref('system')
+                const isDark = ref(false)
+                
+                // Demo state
+                const showLoading = ref(false)
+                const healthValue = ref(75)
+                const playerScore = ref(15420)
+                const playerLevel = ref(5)
+                const timeRemaining = ref(120)
+                const showModal = ref(false)
+                const showConfirmModal = ref(false)
+                const showGameOverModal = ref(false)
+                
+                // Sample cards data
+                const sampleCards = ref([
+                    { id: 1, rank: 'A', suit: 'hearts', symbol: '♥', color: 'red' },
+                    { id: 2, rank: 'K', suit: 'spades', symbol: '♠', color: 'black' },
+                    { id: 3, rank: 'Q', suit: 'diamonds', symbol: '♦', color: 'red' },
+                    { id: 4, rank: 'J', suit: 'clubs', symbol: '♣', color: 'black' }
+                ])
+                
+                const handCards = ref([
+                    { id: 5, rank: '10', suit: 'hearts', symbol: '♥', color: 'red' },
+                    { id: 6, rank: 'J', suit: 'hearts', symbol: '♥', color: 'red' },
+                    { id: 7, rank: 'Q', suit: 'hearts', symbol: '♥', color: 'red' },
+                    { id: 8, rank: 'K', suit: 'hearts', symbol: '♥', color: 'red' },
+                    { id: 9, rank: 'A', suit: 'hearts', symbol: '♥', color: 'red' }
+                ])
+                
+                // Computed properties
+                const healthClass = computed(() => {
+                    if (healthValue.value <= 20) return 'health-critical'
+                    if (healthValue.value <= 40) return 'health-warning'
+                    return 'health-normal'
+                })
+                
+                // Methods
+                const setTheme = (newTheme) => {
+                    theme.value = newTheme
+                    applyTheme()
+                    localStorage.setItem('theme', newTheme)
+                }
+                
+                const toggleTheme = () => {
+                    const newTheme = isDark.value ? 'light' : 'dark'
+                    setTheme(newTheme)
+                }
+                
+                const applyTheme = () => {
+                    const root = document.documentElement
+                    
+                    if (theme.value === 'system') {
+                        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+                        isDark.value = systemDark
+                    } else {
+                        isDark.value = theme.value === 'dark'
+                    }
+                    
+                    if (isDark.value) {
+                        root.classList.add('dark')
+                    } else {
+                        root.classList.remove('dark')
+                    }
+                }
+                
+                const setHealth = (value) => {
+                    healthValue.value = value
+                }
+                
+                const addScore = (points) => {
+                    playerScore.value += points
+                }
+                
+                const startTimer = () => {
+                    if (timeRemaining.value <= 0) {
+                        timeRemaining.value = 120
+                    }
+                    
+                    const timer = setInterval(() => {
+                        timeRemaining.value--
+                        if (timeRemaining.value <= 0) {
+                            clearInterval(timer)
+                        }
+                    }, 1000)
+                }
+                
+                const resetGame = () => {
+                    playerScore.value = 0
+                    playerLevel.value = 1
+                    healthValue.value = 100
+                    timeRemaining.value = 120
+                }
+                
+                // Initialize theme
+                onMounted(() => {
+                    const savedTheme = localStorage.getItem('theme') || 'system'
+                    theme.value = savedTheme
+                    applyTheme()
+                    
+                    // Listen for system theme changes
+                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                        if (theme.value === 'system') {
+                            applyTheme()
+                        }
+                    })
+                })
+                
+                return {
+                    theme,
+                    isDark,
+                    showLoading,
+                    healthValue,
+                    healthClass,
+                    playerScore,
+                    playerLevel,
+                    timeRemaining,
+                    showModal,
+                    showConfirmModal,
+                    showGameOverModal,
+                    sampleCards,
+                    handCards,
+                    setTheme,
+                    toggleTheme,
+                    setHealth,
+                    addScore,
+                    startTimer,
+                    resetGame
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "name": "card-game-design-system",
+  "version": "1.0.0",
+  "description": "A comprehensive design system for card game web applications",
+  "main": "src/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build-css": "tailwindcss -i ./src/styles/main.css -o ./dist/styles.css --watch"
+  },
+  "keywords": [
+    "design-system",
+    "vue",
+    "tailwind",
+    "card-game",
+    "ui-components"
+  ],
+  "author": "Card Game Design System",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "vite": "^4.5.2"
+  },
+  "dependencies": {
+    "vue": "^3.4.15"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  }
+}
